@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--val_size", type=int, default=0)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--max_epoch", type=int, default=200)
-    parser.add_argument("--batch_size", type=int, default=70)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--val_interval", type=int, default=5)
     parser.add_argument("--validation_epoch_start", type=int, default=30)
     parser.add_argument("--resume_train", action="store_true")
@@ -155,21 +155,21 @@ def main():
         train_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
     val_dl = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
     test_dl = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
 
