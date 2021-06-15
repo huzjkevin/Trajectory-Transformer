@@ -4,3 +4,6 @@ models/
 logs/
 env
 __pycache__
+datasets/
+trajectory_combined*/
+.vscode/

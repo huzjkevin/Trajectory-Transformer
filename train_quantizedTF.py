@@ -22,7 +22,7 @@ from torch.utils.tensorboard import SummaryWriter
 def main():
     parser=argparse.ArgumentParser(description='Train the individual Transformer model')
     parser.add_argument('--dataset_folder',type=str,default='datasets')
-    parser.add_argument('--dataset_name',type=str,default='zara1')
+    parser.add_argument('--dataset_name',type=str,default='trajectory_combined')
     parser.add_argument('--obs',type=int,default=8)
     parser.add_argument('--preds',type=int,default=12)
     parser.add_argument('--emb_size',type=int,default=512)
@@ -39,7 +39,7 @@ def main():
     parser.add_argument('--validation_epoch_start', type=int, default=30)
     parser.add_argument('--resume_train',action='store_true')
     parser.add_argument('--delim',type=str,default='\t')
-    parser.add_argument('--name', type=str, default="zara1")
+    parser.add_argument('--name', type=str, default="trajectory_combined")
     parser.add_argument('--factor', type=float, default=1.)
     parser.add_argument('--evaluate',type=bool,default=True)
     parser.add_argument('--save_step', type=int, default=1)
