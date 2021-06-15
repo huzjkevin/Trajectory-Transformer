@@ -71,6 +71,11 @@ def create_dataset(
         raw_data = raw_data.to_numpy()
 
         info = get_scene_sequence(raw_data, gt + horizon, 1)
+
+        # skip scene that does not have valid sequences
+        if info is None:
+            continue
+
         inp = info["inp_norm"][:, :gt]
         out = info["inp_norm"][:, gt:]
 
@@ -410,6 +415,8 @@ def get_scene_sequence(data, seq_len, skip, min_ped=1):
             seq_list.append(curr_seq[:num_peds_considered])
             seq_list_rel.append(curr_seq_rel[:num_peds_considered])
 
+    if len(seq_list) == 0:
+        return None
     # num_peds_in_seq = np.concatenate(num_peds_in_seq, 0)
     num_seq = len(seq_list)
     seq_list = np.concatenate(seq_list, 0).transpose(0, 2, 1)
