@@ -91,7 +91,7 @@ def main():
     )
 
     mat = scipy.io.loadmat(
-        os.path.join("models/Individual", args.dataset_name, "norm.mat")
+        os.path.join("models/IndividualTF", args.dataset_name, "norm.mat")
     )
 
     mean = torch.from_numpy(mat["mean"])
@@ -111,7 +111,7 @@ def main():
     ).to(device)
 
     model.load_state_dict(
-        torch.load(f"models/Individual/{args.name}/{args.epoch}.pth")
+        torch.load(f"models/IndividualTF/{args.name}/{args.epoch}.pth")
     )
     model.to(device)
 
@@ -244,7 +244,7 @@ def main():
 
         preds_all_fin = np.stack(list([samp[i]["pr"] for i in range(num_samples)]), -1)
         scipy.io.savemat(
-            f"output/QuantizedTF/{args.name}/MM_{num_samples}.mat",
+            f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
             {
                 "input": inp,
                 "gt": gt,

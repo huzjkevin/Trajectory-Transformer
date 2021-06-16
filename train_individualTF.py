@@ -58,21 +58,21 @@ def main():
     except:
         pass
     try:
-        os.mkdir("output/Individual")
+        os.mkdir("output/IndividualTF")
     except:
         pass
     try:
-        os.mkdir(f"models/Individual")
-    except:
-        pass
-
-    try:
-        os.mkdir(f"output/Individual/{args.name}")
+        os.mkdir(f"models/IndividualTF")
     except:
         pass
 
     try:
-        os.mkdir(f"models/Individual/{args.name}")
+        os.mkdir(f"output/IndividualTF/{args.name}")
+    except:
+        pass
+
+    try:
+        os.mkdir(f"models/IndividualTF/{args.name}")
     except:
         pass
 
@@ -148,7 +148,7 @@ def main():
     ).to(device)
     if args.resume_train:
         model.load_state_dict(
-            torch.load(f"models/Individual/{args.name}/{args.model_pth}")
+            torch.load(f"models/IndividualTF/{args.name}/{args.model_pth}")
         )
 
     tr_dl = torch.utils.data.DataLoader(
@@ -226,7 +226,7 @@ def main():
     std = torch.stack(stds).mean(0)
 
     scipy.io.savemat(
-        f"models/Individual/{args.name}/norm.mat",
+        f"models/IndividualTF/{args.name}/norm.mat",
         {"mean": mean.cpu().numpy(), "std": std.cpu().numpy()},
     )
 
@@ -401,7 +401,7 @@ def main():
                     # log.add_scalar('eval/DET_fad', fad, epoch)
 
                     scipy.io.savemat(
-                        f"output/Individual/{args.name}/det_{epoch}.mat",
+                        f"output/IndividualTF/{args.name}/det_{epoch}.mat",
                         {
                             "input": inp,
                             "gt": gt,
@@ -414,7 +414,7 @@ def main():
         if epoch % args.save_step == 0:
 
             torch.save(
-                model.state_dict(), f"models/Individual/{args.name}/{epoch:05d}.pth"
+                model.state_dict(), f"models/IndividualTF/{args.name}/{epoch:05d}.pth"
             )
 
         epoch += 1
