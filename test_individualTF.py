@@ -116,7 +116,11 @@ def main():
     model.to(device)
 
     test_dl = torch.utils.data.DataLoader(
-        test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=16, collate_fn=baselineUtils.collate_fn
+        test_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=16,
+        collate_fn=baselineUtils.collate_fn,
     )
 
     # DETERMINISTIC MODE
@@ -126,10 +130,14 @@ def main():
         pr = []
         inp_ = []
         dt = []
+
+        ade, fde = [], []
         for id_b, batch in enumerate(test_dl):
             print(f"batch {id_b:03d}/{len(test_dl)}")
+            
             dt.append(batch["dataset"])
-            gt.append(batch["trg"][:, :, 0:2])
+            _gt = batch["trg"][:, :, 0:2]
+            gt.append(_gt)
             inp = (batch["src"][:, 1:, 2:4].to(device) - mean.to(device)) / std.to(
                 device
             )
@@ -156,14 +164,23 @@ def main():
             preds_tr_b = (
                 dec_inp[:, 1:, 0:2] * std.to(device) + mean.to(device)
             ).cpu().numpy().cumsum(1) + batch["src"][:, -1:, 0:2].cpu().numpy()
+
+            _mad, _fad, _ = baselineUtils.distance_metrics(_gt, preds_tr_b)
+            ade.append(_mad)
+            fde.append(_fad)
+
             pr.append(preds_tr_b)
 
         dt = np.concatenate(dt, 0)
         gt = np.concatenate(gt, 0)
         dt_names = test_dataset.data["dataset_name"]
         pr = np.concatenate(pr, 0)
-        mad, fad, errs = baselineUtils.distance_metrics(gt, pr)
+        # mad, fad, errs = baselineUtils.distance_metrics(gt, pr)
 
+        ade = np.array(ade)
+        fde = np.array(fde)
+        mad = ade.mean()
+        fad = fde.mean()
         scipy.io.savemat(
             f"output/IndividualTF/{args.name}/MM_deterministic.mat",
             {
@@ -187,12 +204,15 @@ def main():
         pr_all = {}
         inp_ = []
         dt = []
+        ade, fde = [], []
         for sam in range(num_samples):
             pr_all[sam] = []
         for id_b, batch in enumerate(test_dl):
             print(f"batch {id_b:03d}/{len(test_dl)}")
+
             dt.append(batch["dataset"])
-            gt.append(batch["trg"][:, :, 0:2])
+            _gt = batch["trg"][:, :, 0:2]
+            gt.append(_gt)
             inp = (batch["src"][:, 1:, 2:4].to(device) - mean.to(device)) / std.to(
                 device
             )
@@ -206,6 +226,7 @@ def main():
                 .to(device)
             )
 
+            ade_sample, fde_sample = [], []
             for sam in range(num_samples):
                 dec_inp = start_of_seq
                 for i in range(args.preds):
@@ -214,10 +235,6 @@ def main():
                         .repeat(dec_inp.shape[0], 1, 1)
                         .to(device)
                     )
-
-                    out = model.predict(inp, dec_inp, src_att, trg_att)
-                    h=out[:,-1]
-                    dec_inp=torch.cat((dec_inp,torch.multinomial(h,1)),1)
                     out = model(inp, dec_inp, src_att, trg_att)
                     dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
@@ -225,34 +242,46 @@ def main():
                     dec_inp[:, 1:, 0:2] * std.to(device) + mean.to(device)
                 ).cpu().numpy().cumsum(1) + batch["src"][:, -1:, 0:2].cpu().numpy()
 
-                pr_all[sam].append(preds_tr_b)
+                _mad, _fad, _ = baselineUtils.distance_metrics(_gt, preds_tr_b)
+                ade_sample.append(_mad)
+                fde_sample.append(_fad)
+
+                # pr_all[sam].append(preds_tr_b)
+            
+            ade.append(min(ade_sample))
+            fde.append(min(fde_sample))
 
         dt = np.concatenate(dt, 0)
         gt = np.concatenate(gt, 0)
         dt_names = test_dataset.data["dataset_name"]
 
-        samp = {}
-        for k in pr_all.keys():
-            samp[k] = {}
-            samp[k]["pr"] = np.concatenate(pr_all[k], 0)
-            (
-                samp[k]["mad"],
-                samp[k]["fad"],
-                samp[k]["err"],
-            ) = baselineUtils.distance_metrics(gt, samp[k]["pr"])
+        # samp = {}
+        # for k in pr_all.keys():
+        #     samp[k] = {}
+        #     samp[k]["pr"] = np.concatenate(pr_all[k], 0)
+        #     (
+        #         samp[k]["mad"],
+        #         samp[k]["fad"],
+        #         samp[k]["err"],
+        #     ) = baselineUtils.distance_metrics(gt, samp[k]["pr"])
 
-        ev = [samp[i]["err"] for i in range(num_samples)]
-        e20 = np.stack(ev, -1)
-        mad_samp = e20.mean(1).min(-1).mean()
-        fad_samp = e20[:, -1].min(-1).mean()
+        # ev = [samp[i]["err"] for i in range(num_samples)]
+        # e20 = np.stack(ev, -1)
+        # mad_samp = e20.mean(1).min(-1).mean()
+        # fad_samp = e20[:, -1].min(-1).mean()
+        # preds_all_fin = np.stack(list([samp[i]["pr"] for i in range(num_samples)]), -1)
 
-        preds_all_fin = np.stack(list([samp[i]["pr"] for i in range(num_samples)]), -1)
+        ade = np.array(ade)
+        fde = np.array(fde)
+        mad_samp = ade.mean()
+        fad_samp = fde.mean()
+
         scipy.io.savemat(
             f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
             {
                 "input": inp,
                 "gt": gt,
-                "pr": preds_all_fin,
+                # "pr": preds_all_fin,
                 "dt": dt,
                 "dt_names": dt_names,
             },
