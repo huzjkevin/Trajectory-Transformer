@@ -9,6 +9,7 @@ import time
 from transformer.batch import subsequent_mask
 from torch.optim import Adam, SGD, RMSprop, Adagrad
 from transformer.noam_opt import NoamOpt
+import individual_TF
 import numpy as np
 import scipy.io
 import json
@@ -132,7 +133,6 @@ def main():
         verbose=args.verbose,
     )
 
-    import individual_TF
 
     model = individual_TF.IndividualTF(
         2,
