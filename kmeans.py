@@ -28,10 +28,10 @@ def main():
     parser.add_argument('--dropout',type=float,default=0.1)
     parser.add_argument('--cpu',action='store_true')
     parser.add_argument('--output_folder',type=str,default='Output')
-    parser.add_argument('--val_size',type=int, default=50)
+    parser.add_argument('--val_size',type=int, default=0)
     parser.add_argument('--verbose',action='store_true')
     parser.add_argument('--max_epoch',type=int, default=100)
-    parser.add_argument('--batch_size',type=int,default=256)
+    parser.add_argument('--batch_size',type=int,default=64)
     parser.add_argument('--validation_epoch_start', type=int, default=30)
     parser.add_argument('--resume_train',action='store_true')
     parser.add_argument('--delim',type=str,default='\t')
@@ -72,8 +72,8 @@ def main():
     #                                                                 verbose=args.verbose)
     test_dataset,_ =  baselineUtils.create_dataset(args.dataset_folder,args.dataset_name,0,args.obs,args.preds,delim=args.delim,train=False,eval=True,verbose=args.verbose)
 
-    tr = train_dataset[:]['src'][:, 1:, 2:4].reshape(-1, 2)
-    pr = train_dataset[:]['trg'][:, :, 2:4].reshape(-1, 2)
+    tr = torch.from_numpy(train_dataset.data['src'][:, 1:, 2:4].reshape(-1, 2))
+    pr = torch.from_numpy(train_dataset.data['trg'][:, :, 2:4].reshape(-1, 2))
     t = torch.cat((tr, pr), 0)
     t= t.cpu().numpy()
     if args.scale:
@@ -90,11 +90,11 @@ def main():
     plt.close()
 
 
-    te = test_dataset[:]['src'][:, 1:, 2:4].reshape(-1, 2)
+    te = torch.from_numpy(test_dataset.data['src'][:, 1:, 2:4].reshape(-1, 2))
     test=te
 
     if args.dataset_name!="trajnet":
-        pe = test_dataset[:]['trg'][:, :, 2:4].reshape(-1, 2)
+        pe = torch.from_numpy(test_dataset.data['trg'][:, :, 2:4].reshape(-1, 2))
         test= torch.cat((te, pe), 0)
     test = test.cpu().numpy()
 

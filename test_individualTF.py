@@ -214,6 +214,10 @@ def main():
                         .repeat(dec_inp.shape[0], 1, 1)
                         .to(device)
                     )
+
+                    out = model.predict(inp, dec_inp, src_att, trg_att)
+                    h=out[:,-1]
+                    dec_inp=torch.cat((dec_inp,torch.multinomial(h,1)),1)
                     out = model(inp, dec_inp, src_att, trg_att)
                     dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 

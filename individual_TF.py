@@ -49,6 +49,9 @@ class IndividualTF(nn.Module):
     def forward(self, *input):
         return self.model.generator(self.model(*input))
 
+    def predict(self,*input):
+        return F.softmax(self.model.generator(self.model(*input)), dim=-1)
+
 class LinearEmbedding(nn.Module):
     def __init__(self, inp_size,d_model):
         super(LinearEmbedding, self).__init__()
