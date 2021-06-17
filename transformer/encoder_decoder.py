@@ -26,11 +26,7 @@ class EncoderDecoder(nn.Module):
         return self.decode(self.encode(src, src_mask), src_mask, tgt, tgt_mask)
 
     def encode(self, src, src_mask):
-        feat_before_noise = self.encoder(self.src_embed(src), src_mask)
-        n_batch, seq_len, _ = feat_before_noise.size()
-        noise = torch.randn((n_batch, seq_len, self.noise_dim)).cuda()
-        feat = torch.cat((feat_before_noise, noise), dim=-1)
-        return feat
+        return self.encoder(self.src_embed(src), src_mask)
 
     def decode(self, memory, src_mask, tgt, tgt_mask):
         return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
