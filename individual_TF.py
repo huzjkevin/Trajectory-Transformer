@@ -36,21 +36,17 @@ class IndividualTF(nn.Module):
         super(IndividualTF, self).__init__()
         "Helper: Construct a model from hyperparameters."
         c = copy.deepcopy
-        attn_enc = MultiHeadAttention(h, d_model)
-        ff_enc = PointerwiseFeedforward(d_model, d_ff, dropout)
-        position_enc = PositionalEncoding(d_model, dropout)
-
-        attn_dec = MultiHeadAttention(h, d_model + noise_dim)
-        ff_dec = PointerwiseFeedforward(d_model + noise_dim, d_ff, dropout)
-        position_dec = PositionalEncoding(d_model + noise_dim, dropout) # test for noise
+        attn = MultiHeadAttention(h, d_model)
+        ff = PointerwiseFeedforward(d_model, d_ff, dropout)
+        position = PositionalEncoding(d_model, dropout)
         self.mean = np.array(mean)
         self.std = np.array(std)
         self.model = EncoderDecoder(
-            Encoder(EncoderLayer(d_model, c(attn_enc), c(ff_enc), dropout), N),
-            Decoder(DecoderLayer(d_model + noise_dim, c(attn_dec), c(attn_dec), c(ff_dec), dropout), N),
-            nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position_enc)),
-            nn.Sequential(LinearEmbedding(dec_inp_size, d_model + noise_dim), c(position_dec)),
-            Generator(d_model + noise_dim, dec_out_size),
+            Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+            nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
+            nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
+            Generator(d_model, dec_out_size),
             noise_dim
         )
 

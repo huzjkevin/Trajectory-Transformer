@@ -14,6 +14,10 @@ import numpy as np
 import scipy.io
 import json
 import pickle
+import datetime
+import logging
+import random
+import yaml
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -49,34 +53,31 @@ def main():
     args = parser.parse_args()
     model_name = args.name
 
-    try:
-        os.mkdir("models")
-    except:
-        pass
-    try:
-        os.mkdir("output")
-    except:
-        pass
-    try:
-        os.mkdir("output/IndividualTF")
-    except:
-        pass
-    try:
-        os.mkdir(f"models/IndividualTF")
-    except:
-        pass
+    curr_time = datetime.datetime.now()
+    output_dir = f"exp_{args.dataset_name}_{curr_time.strftime('%Y%m%d%H%M%S')}"
+    os.makedirs(output_dir, exist_ok=True)
 
-    try:
-        os.mkdir(f"output/IndividualTF/{args.name}")
-    except:
-        pass
+    checkpoint_dir = os.path.join(output_dir, f"IndividualTF_ckpts")
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
-    try:
-        os.mkdir(f"models/IndividualTF/{args.name}")
-    except:
-        pass
+    model_output_dir = os.path.join(output_dir, f"IndividualTF_outputs")
+    os.makedirs(model_output_dir, exist_ok=True)
 
-    log = SummaryWriter("logs/Ind_%s" % model_name)
+    # keep track of console outputs and experiment settings
+    baselineUtils.set_logger(
+        os.path.join(output_dir, f"train_{args.dataset_name}.log")
+    )
+    config_file = open(
+        os.path.join(output_dir, f"config_{args.dataset_name}.yaml"), "w"
+    )
+    yaml.dump(args, config_file)
+    tensorboard_dir = os.path.join(output_dir, "tensorboard")
+    log = SummaryWriter(tensorboard_dir)
+
+    seed = 72
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
     log.add_scalar("eval/mad", 0, 0)
     log.add_scalar("eval/fad", 0, 0)
@@ -148,7 +149,7 @@ def main():
     ).to(device)
     if args.resume_train:
         model.load_state_dict(
-            torch.load(f"models/IndividualTF/{args.name}/{args.model_pth}")
+            torch.load(f"{checkpoint_dir}/{args.model_pth}")
         )
 
     tr_dl = torch.utils.data.DataLoader(
@@ -226,7 +227,7 @@ def main():
     std = torch.stack(stds).mean(0)
 
     scipy.io.savemat(
-        f"models/IndividualTF/{args.name}/norm.mat",
+        f"{output_dir}/norm.mat",
         {"mean": mean.cpu().numpy(), "std": std.cpu().numpy()},
     )
 
@@ -279,7 +280,7 @@ def main():
             )
             loss.backward()
             optim.step()
-            print(
+            logging.info(
                 "train epoch %03i/%03i  batch %04i / %04i loss: %7.4f"
                 % (epoch, args.max_epoch, id_b, len(tr_dl), loss.item())
             )
@@ -329,7 +330,7 @@ def main():
                         dec_inp[:, 1:, 0:2] * std.to(device) + mean.to(device)
                     ).cpu().numpy().cumsum(1) + batch["src"][:, -1:, 0:2].cpu().numpy()
                     pr.append(preds_tr_b)
-                    print(
+                    logging.info(
                         "val epoch %03i/%03i  batch %04i / %04i"
                         % (epoch, args.max_epoch, id_b, len(val_dl))
                     )
@@ -383,7 +384,7 @@ def main():
                             :, -1:, 0:2
                         ].cpu().numpy()
                         pr.append(preds_tr_b)
-                        print(
+                        logging.info(
                             "test epoch %03i/%03i  batch %04i / %04i"
                             % (epoch, args.max_epoch, id_b, len(test_dl))
                         )
@@ -401,7 +402,7 @@ def main():
                     # log.add_scalar('eval/DET_fad', fad, epoch)
 
                     scipy.io.savemat(
-                        f"output/IndividualTF/{args.name}/det_{epoch}.mat",
+                        f"{model_output_dir}/det_{epoch}.mat",
                         {
                             "input": inp,
                             "gt": gt,
@@ -414,7 +415,7 @@ def main():
         if epoch % args.save_step == 0:
 
             torch.save(
-                model.state_dict(), f"models/IndividualTF/{args.name}/{epoch:05d}.pth"
+                model.state_dict(), f"{checkpoint_dir}/{epoch:05d}.pth"
             )
 
         epoch += 1

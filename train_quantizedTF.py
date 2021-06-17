@@ -13,8 +13,13 @@ import numpy as np
 import scipy.io
 import json
 import pickle
+import datetime
+import logging
+import random
+import yaml
 
 from torch.utils.tensorboard import SummaryWriter
+
 
 
 def main():
@@ -47,35 +52,32 @@ def main():
 
     args = parser.parse_args()
     model_name = args.name
+    
+    curr_time = datetime.datetime.now()
+    output_dir = f"exp_{args.dataset_name}_{curr_time.strftime('%Y%m%d%H%M%S')}"
+    os.makedirs(output_dir, exist_ok=True)
 
-    try:
-        os.mkdir("models")
-    except:
-        pass
-    try:
-        os.mkdir("output")
-    except:
-        pass
-    try:
-        os.mkdir("output/QuantizedTF")
-    except:
-        pass
-    try:
-        os.mkdir(f"models/QuantizedTF")
-    except:
-        pass
+    checkpoint_dir = os.path.join(output_dir, f"QuantizedTF_ckpts")
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
-    try:
-        os.mkdir(f"output/QuantizedTF/{args.name}")
-    except:
-        pass
+    model_output_dir = os.path.join(output_dir, f"QuantizedTF_outputs")
+    os.makedirs(model_output_dir, exist_ok=True)
 
-    try:
-        os.mkdir(f"models/QuantizedTF/{args.name}")
-    except:
-        pass
+    # keep track of console outputs and experiment settings
+    baselineUtils.set_logger(
+        os.path.join(output_dir, f"train_{args.dataset_name}.log")
+    )
+    config_file = open(
+        os.path.join(output_dir, f"config_{args.dataset_name}.yaml"), "w"
+    )
+    yaml.dump(args, config_file)
+    tensorboard_dir = os.path.join(output_dir, "tensorboard")
+    log = SummaryWriter(tensorboard_dir)
 
-    log = SummaryWriter("logs/%s" % model_name)
+    seed = 72
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
     # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
     device = torch.device("cuda")
@@ -153,21 +155,21 @@ def main():
         train_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
     val_dl = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
     test_dl = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=0,
+        num_workers=16,
         collate_fn=baselineUtils.collate_fn,
     )
 
@@ -223,7 +225,7 @@ def main():
             )
             loss.backward()
             optim.step()
-            print(
+            logging.info(
                 "epoch %03i/%03i  frame %04i / %04i loss: %7.4f"
                 % (epoch, args.max_epoch, id_b, len(tr_dl), loss.item())
             )
@@ -281,7 +283,7 @@ def main():
                     reduction="mean",
                 )
 
-                print(
+                logging.info(
                     "val epoch %03i/%03i  frame %04i / %04i loss: %7.4f"
                     % (epoch, args.max_epoch, step, len(val_dl), loss.item())
                 )
@@ -359,7 +361,7 @@ def main():
                 log.add_scalar("eval/DET_fad", fad, epoch)
 
                 scipy.io.savemat(
-                    f"output/QuantizedTF/{args.name}/{epoch:05d}.mat",
+                    f"{model_output_dir}/{epoch:05d}.mat",
                     {
                         "input": inp,
                         "gt": gt,
@@ -453,7 +455,7 @@ def main():
             if epoch % args.save_step == 0:
                 torch.save(
                     model.state_dict(),
-                    f"models/QuantizedTF/{args.name}/{epoch:05d}.pth",
+                    f"{checkpoint_dir}/{epoch:05d}.pth",
                 )
 
         epoch += 1
