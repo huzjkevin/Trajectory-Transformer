@@ -43,6 +43,7 @@ class IndividualTF(nn.Module):
         self.std = np.array(std)
         self.model = EncoderDecoder(
             Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
             Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
             nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
             nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),

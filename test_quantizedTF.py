@@ -189,18 +189,18 @@ def main():
         # log.add_scalar('eval/DET_mad', mad, epoch)
         # log.add_scalar('eval/DET_fad', fad, epoch)
 
-        scipy.io.savemat(
-            f"output/QuantizedTF/{args.name}/MM_deterministic.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                "pr": pr,
-                # "peds": peds,
-                # "frames": frames,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/QuantizedTF/{args.name}/MM_deterministic.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         "pr": pr,
+        #         # "peds": peds,
+        #         # "frames": frames,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)
@@ -289,18 +289,18 @@ def main():
         # log.add_scalar('eval/MM_mad', mad_samp, epoch)
         # log.add_scalar('eval/MM_fad', fad_samp, epoch)
         preds_all_fin = np.stack(list([samp[i]["pr"] for i in range(num_samples)]), -1)
-        scipy.io.savemat(
-            f"output/QuantizedTF/{args.name}/MM_{num_samples}.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                "pr": preds_all_fin,
-                # "peds": peds,
-                # "frames": frames,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/QuantizedTF/{args.name}/MM_{num_samples}.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         "pr": preds_all_fin,
+        #         # "peds": peds,
+        #         # "frames": frames,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)

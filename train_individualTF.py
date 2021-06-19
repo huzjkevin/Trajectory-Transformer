@@ -238,12 +238,14 @@ def main():
         for id_b, batch in enumerate(tr_dl):
 
             optim.optimizer.zero_grad()
+            seq_start_end = batch["seq_start_end"]
             inp = (batch["src"][:, 1:, 2:4].to(device) - mean.to(device)) / std.to(
                 device
             )
             target = (batch["trg"][:, :-1, 2:4].to(device) - mean.to(device)) / std.to(
                 device
             )
+            
             target_c = torch.zeros((target.shape[0], target.shape[1], 1)).to(device)
             target = torch.cat((target, target_c), -1)
             start_of_seq = (
@@ -263,7 +265,7 @@ def main():
                 .to(device)
             )
 
-            pred = model(inp, dec_inp, src_att, trg_att)
+            pred = model(inp, dec_inp, src_att, trg_att, seq_start_end)
 
             loss = (
                 F.pairwise_distance(
@@ -304,6 +306,7 @@ def main():
                     gt.append(batch["trg"][:, :, 0:2])
                     dt.append(batch["dataset"])
 
+                    seq_start_end = batch["seq_start_end"]
                     inp = (
                         batch["src"][:, 1:, 2:4].to(device) - mean.to(device)
                     ) / std.to(device)
@@ -323,7 +326,7 @@ def main():
                             .repeat(dec_inp.shape[0], 1, 1)
                             .to(device)
                         )
-                        out = model(inp, dec_inp, src_att, trg_att)
+                        out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                         dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
                     preds_tr_b = (
@@ -356,6 +359,7 @@ def main():
                         gt.append(batch["trg"][:, :, 0:2])
                         dt.append(batch["dataset"])
 
+                        seq_start_end = batch["seq_start_end"]
                         inp = (
                             batch["src"][:, 1:, 2:4].to(device) - mean.to(device)
                         ) / std.to(device)
@@ -375,7 +379,7 @@ def main():
                                 .repeat(dec_inp.shape[0], 1, 1)
                                 .to(device)
                             )
-                            out = model(inp, dec_inp, src_att, trg_att)
+                            out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                             dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
                         preds_tr_b = (
