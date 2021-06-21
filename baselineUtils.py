@@ -168,6 +168,8 @@ class IndividualTfDataset(Dataset):
 
     def __getitem__(self, index):
         start, end = self.data["seq_start_end"][index]
+        a = torch.from_numpy(self.data["src"][start: end])
+        b = self.data["src"][start: end]
         return {
             "src": torch.from_numpy(self.data["src"][start: end]),
             "trg": torch.from_numpy(self.data["trg"][start: end]),
