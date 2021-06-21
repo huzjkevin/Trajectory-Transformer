@@ -32,13 +32,13 @@ class Encoder(nn.Module):
         self.layers = clones(layer, n)
         self.norm = LayerNorm(layer.size)
 
-        n_units = [512, 16, 512]
-        n_heads = [4, 1]
-        dropout = 0.2
-        alpha = 0.2
-        self.gatencoder = GATEncoder(
-            n_units=n_units, n_heads=n_heads, dropout=dropout, alpha=alpha
-        )
+        # n_units = [512, 16, 512]
+        # n_heads = [4, 1]
+        # dropout = 0.2
+        # alpha = 0.2
+        # self.gatencoder = GATEncoder(
+        #     n_units=n_units, n_heads=n_heads, dropout=dropout, alpha=alpha
+        # )
 
     def forward(self, x, x_mask, seq_start_end=None):
         """
@@ -49,8 +49,8 @@ class Encoder(nn.Module):
 
         x = self.norm(x)
 
-        if seq_start_end is not None:
-            x = self.gatencoder(x.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
+        # if seq_start_end is not None:
+        #     x = self.gatencoder(x.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
 
         # return self.norm(x)
         return x

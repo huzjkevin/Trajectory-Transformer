@@ -9,7 +9,7 @@ import time
 from transformer.batch import subsequent_mask
 from torch.optim import Adam, SGD, RMSprop, Adagrad
 from transformer.noam_opt import NoamOpt
-import individual_TF
+import individual_TF_pytorch
 import numpy as np
 import scipy.io
 import json
@@ -132,7 +132,7 @@ def main():
         verbose=args.verbose,
     )
 
-    model = individual_TF.IndividualTF(
+    model = individual_TF_pytorch.IndividualTF(
         2,
         3,
         3,
@@ -259,18 +259,20 @@ def main():
             #     .repeat(dec_inp.shape[0], 1, 1)
             #     .to(device)
             # )
-            src_att = torch.ones(
-                (inp.shape[1], inp.shape[1]),
-            ).to(device)
-            trg_att = (
-                torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1])) == 1
-            ).transpose(0, 1)
-            trg_att = (
-                trg_att.float()
-                .masked_fill(trg_att == 0, float("-inf"))
-                .masked_fill(trg_att == 1, float(0.0))
-                .to(device)
-            )
+            trg_att = individual_TF_pytorch.generate_square_subsequent_mask(dec_inp.shape[1]).to(device)
+            src_att = torch.zeros((inp.shape[1], inp.shape[1])).type(torch.bool).to(device)
+            # src_att = torch.ones(
+            #     (inp.shape[1], inp.shape[1]),
+            # ).to(device)
+            # trg_att = (
+            #     torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1])) == 1
+            # ).transpose(0, 1)
+            # trg_att = (
+            #     trg_att.float()
+            #     .masked_fill(trg_att == 0, float("-inf"))
+            #     .masked_fill(trg_att == 1, float(0.0))
+            #     .to(device)
+            # )
 
             pred = model(inp, dec_inp, src_att, trg_att, seq_start_end)
 
@@ -327,25 +329,27 @@ def main():
 
                     dec_inp = start_of_seq
                     # src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
-                    src_att = torch.ones(
-                        (inp.shape[1], inp.shape[1]),
-                    ).to(device)
+                    src_att = torch.zeros((inp.shape[1], inp.shape[1])).type(torch.bool).to(device)
+                    # src_att = torch.ones(
+                    #     (inp.shape[1], inp.shape[1]),
+                    # ).to(device)
                     for i in range(args.preds):
-                        # trg_att = (
-                        #     subsequent_mask(dec_inp.shape[1])
-                        #     .repeat(dec_inp.shape[0], 1, 1)
-                        #     .to(device)
-                        # )
                         trg_att = (
-                            torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1]))
-                            == 1
-                        ).transpose(0, 1)
-                        trg_att = (
-                            trg_att.float()
-                            .masked_fill(trg_att == 0, float("-inf"))
-                            .masked_fill(trg_att == 1, float(0.0))
+                            subsequent_mask(dec_inp.shape[1])
+                            .repeat(dec_inp.shape[0], 1, 1)
                             .to(device)
                         )
+                        # trg_att = (
+                        #     torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1]))
+                        #     == 1
+                        # ).transpose(0, 1)
+                        trg_att = individual_TF_pytorch.generate_square_subsequent_mask(dec_inp.shape[1]).to(device)
+                        # trg_att = (
+                        #     trg_att.float()
+                        #     .masked_fill(trg_att == 0, float("-inf"))
+                        #     .masked_fill(trg_att == 1, float(0.0))
+                        #     .to(device)
+                        # )
                         out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                         dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
@@ -394,27 +398,29 @@ def main():
 
                         dec_inp = start_of_seq
                         # src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
-                        src_att = torch.ones(
-                            (inp.shape[1], inp.shape[1]),
-                        ).to(device)
+                        src_att = torch.zeros((inp.shape[1], inp.shape[1])).type(torch.bool).to(device)
+                        # src_att = torch.ones(
+                        #     (inp.shape[1], inp.shape[1]),
+                        # ).to(device)
                         for i in range(args.preds):
-                            # trg_att = (
-                            #     subsequent_mask(dec_inp.shape[1])
-                            #     .repeat(dec_inp.shape[0], 1, 1)
-                            #     .to(device)
-                            # )
                             trg_att = (
-                                torch.triu(
-                                    torch.ones(dec_inp.shape[1], dec_inp.shape[1])
-                                )
-                                == 1
-                            ).transpose(0, 1)
-                            trg_att = (
-                                trg_att.float()
-                                .masked_fill(trg_att == 0, float("-inf"))
-                                .masked_fill(trg_att == 1, float(0.0))
+                                subsequent_mask(dec_inp.shape[1])
+                                .repeat(dec_inp.shape[0], 1, 1)
                                 .to(device)
                             )
+                            # trg_att = (
+                            #     torch.triu(
+                            #         torch.ones(dec_inp.shape[1], dec_inp.shape[1])
+                            #     )
+                            #     == 1
+                            # ).transpose(0, 1)
+                            trg_att = individual_TF_pytorch.generate_square_subsequent_mask(dec_inp.shape[1]).to(device)
+                            # trg_att = (
+                            #     trg_att.float()
+                            #     .masked_fill(trg_att == 0, float("-inf"))
+                            #     .masked_fill(trg_att == 1, float(0.0))
+                            #     .to(device)
+                            # )
                             out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                             dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
