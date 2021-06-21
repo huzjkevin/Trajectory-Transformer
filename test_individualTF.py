@@ -14,6 +14,7 @@ import numpy as np
 import scipy.io
 import json
 import pickle
+import random
 
 from torch.utils.tensorboard import SummaryWriter
 import quantized_TF
@@ -36,38 +37,42 @@ def main():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--delim", type=str, default="\t")
     parser.add_argument("--name", type=str, default="trajectory_combined")
-    parser.add_argument("--epoch", type=str, default="00100")
+    parser.add_argument("--epoch", type=str, default="00000")
     parser.add_argument("--num_samples", type=int, default="20")
 
     args = parser.parse_args()
     model_name = args.name
 
-    try:
-        os.mkdir("models")
-    except:
-        pass
-    try:
-        os.mkdir("output")
-    except:
-        pass
-    try:
-        os.mkdir("output/IndividualTF")
-    except:
-        pass
-    try:
-        os.mkdir(f"models/IndividualTF")
-    except:
-        pass
+    # try:
+    #     os.mkdir("models")
+    # except:
+    #     pass
+    # try:
+    #     os.mkdir("output")
+    # except:
+    #     pass
+    # try:
+    #     os.mkdir("output/IndividualTF")
+    # except:
+    #     pass
+    # try:
+    #     os.mkdir(f"models/IndividualTF")
+    # except:
+    #     pass
 
-    try:
-        os.mkdir(f"output/IndividualTF/{args.name}")
-    except:
-        pass
+    # try:
+    #     os.mkdir(f"output/IndividualTF/{args.name}")
+    # except:
+    #     pass
 
-    try:
-        os.mkdir(f"models/IndividualTF/{args.name}")
-    except:
-        pass
+    # try:
+    #     os.mkdir(f"models/IndividualTF/{args.name}")
+    # except:
+    #     pass
+    seed = 72
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
 
     device = torch.device("cuda")
 
@@ -110,8 +115,11 @@ def main():
         std=[0, 0],
     ).to(device)
 
+    checkpoint_dir = os.path.join(
+        "exp_trajectory_combined_20210621113252", f"IndividualTF_ckpts"
+    )
     model.load_state_dict(
-        torch.load(f"models/IndividualTF/{args.name}/{args.epoch}.pth")
+        torch.load(f"{checkpoint_dir}/{args.epoch}.pth")
     )
     model.to(device)
 
@@ -136,6 +144,7 @@ def main():
             print(f"batch {id_b:03d}/{len(test_dl)}")
             
             dt.append(batch["dataset"])
+            seq_start_end = batch["seq_start_end"]
             _gt = batch["trg"][:, :, 0:2]
             gt.append(_gt)
             inp = (batch["src"][:, 1:, 2:4].to(device) - mean.to(device)) / std.to(
@@ -158,7 +167,7 @@ def main():
                     .repeat(dec_inp.shape[0], 1, 1)
                     .to(device)
                 )
-                out = model(inp, dec_inp, src_att, trg_att)
+                out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                 dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
             preds_tr_b = (
@@ -210,6 +219,7 @@ def main():
         for id_b, batch in enumerate(test_dl):
             print(f"batch {id_b:03d}/{len(test_dl)}")
 
+            seq_start_end = batch["seq_start_end"]
             dt.append(batch["dataset"])
             _gt = batch["trg"][:, :, 0:2]
             gt.append(_gt)
@@ -235,7 +245,7 @@ def main():
                         .repeat(dec_inp.shape[0], 1, 1)
                         .to(device)
                     )
-                    out = model(inp, dec_inp, src_att, trg_att)
+                    out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                     dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
                 preds_tr_b = (
