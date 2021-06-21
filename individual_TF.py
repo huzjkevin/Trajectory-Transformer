@@ -46,7 +46,7 @@ class IndividualTF(nn.Module):
             # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
             Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
             nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
-            nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
+            nn.Sequential(LinearEmbedding(dec_inp_size, d_model, is_enc=False), c(position)),
             Generator(d_model, dec_out_size),
             noise_dim,
         )
@@ -94,13 +94,18 @@ class IndividualTF(nn.Module):
 
 
 class LinearEmbedding(nn.Module):
-    def __init__(self, inp_size, d_model):
+    def __init__(self, inp_size, d_model, is_enc=True):
         super(LinearEmbedding, self).__init__()
         # lut => lookup table
+        self.is_enc = is_enc
         self.lut = nn.Linear(inp_size, d_model)
         self.d_model = d_model
 
     def forward(self, x):
+        # return self.lut(x) * math.sqrt(self.d_model)
+        if self.is_enc:
+            return x * math.sqrt(self.d_model)
+        
         return self.lut(x) * math.sqrt(self.d_model)
 
 

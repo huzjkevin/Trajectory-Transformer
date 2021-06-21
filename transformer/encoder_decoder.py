@@ -20,7 +20,7 @@ class EncoderDecoder(nn.Module):
         self.generator = generator
         self.noise_dim = noise_dim
 
-        n_units = [2, 16, 2]
+        n_units = [2, 16, 512]
         n_heads = [4, 1]
         dropout = 0.2
         alpha = 0.2
