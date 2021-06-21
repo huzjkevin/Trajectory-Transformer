@@ -41,21 +41,53 @@ class IndividualTF(nn.Module):
         position = PositionalEncoding(d_model, dropout)
         self.mean = np.array(mean)
         self.std = np.array(std)
+        # self.model = EncoderDecoder(
+        #     Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+        #     # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+        #     Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+        #     nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
+        #     nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
+        #     Generator(d_model, dec_out_size),
+        #     noise_dim,
+        # )
+
         self.model = EncoderDecoder(
-            Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            torch.nn.Transformer(
+                d_model=d_model,
+                nhead=h,
+                num_encoder_layers=N,
+                num_decoder_layers=6,
+                dim_feedforward=d_ff,
+            ),
             # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-            Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+            # Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
             nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
             nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
             Generator(d_model, dec_out_size),
-            noise_dim
+            noise_dim,
         )
+
+        # self.enc_embedding = (
+        #     nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
+        # )
+        # self.dec_embedding = (
+        #     nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
+        # )
+        # self.transformer = torch.nn.Transformer(
+        #     d_model=d_model,
+        #     nhead=h,
+        #     num_encoder_layers=N,
+        #     num_decoder_layers=6,
+        #     dim_feedforward=d_ff,
+        # )
+        # self.generator = Generator(d_model, dec_out_size)
 
         # This was important from their code.
         # Initialize parameters with Glorot / fan_avg.
         for p in self.model.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
+
 
     def forward(self, *input):
         return self.model.generator(self.model(*input))
