@@ -41,31 +41,31 @@ class IndividualTF(nn.Module):
         position = PositionalEncoding(d_model, dropout)
         self.mean = np.array(mean)
         self.std = np.array(std)
-        # self.model = EncoderDecoder(
-        #     Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-        #     # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-        #     Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
-        #     nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
-        #     nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
-        #     Generator(d_model, dec_out_size),
-        #     noise_dim,
-        # )
-
         self.model = EncoderDecoder(
-            torch.nn.Transformer(
-                d_model=d_model,
-                nhead=h,
-                num_encoder_layers=N,
-                num_decoder_layers=6,
-                dim_feedforward=d_ff,
-            ),
+            Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
             # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
-            # Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+            Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
             nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
             nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
             Generator(d_model, dec_out_size),
             noise_dim,
         )
+
+        # self.model = EncoderDecoder(
+        #     torch.nn.Transformer(
+        #         d_model=d_model,
+        #         nhead=h,
+        #         num_encoder_layers=N,
+        #         num_decoder_layers=6,
+        #         dim_feedforward=d_ff,
+        #     ),
+        #     # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+        #     # Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+        #     nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),
+        #     nn.Sequential(LinearEmbedding(dec_inp_size, d_model), c(position)),
+        #     Generator(d_model, dec_out_size),
+        #     noise_dim,
+        # )
 
         # self.enc_embedding = (
         #     nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),

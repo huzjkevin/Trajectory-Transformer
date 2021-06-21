@@ -44,13 +44,15 @@ class Encoder(nn.Module):
         """
         Pass the input (and mask) through each layer in turn.
         """
+        if seq_start_end is not None:
+            x = self.gatencoder(x.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
+            
         for layer in self.layers:
             x = layer(x, x_mask)
 
         x = self.norm(x)
 
-        if seq_start_end is not None:
-            x = self.gatencoder(x.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
+        
 
         # return self.norm(x)
         return x
