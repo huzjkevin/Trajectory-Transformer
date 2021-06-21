@@ -64,9 +64,7 @@ def main():
     os.makedirs(model_output_dir, exist_ok=True)
 
     # keep track of console outputs and experiment settings
-    baselineUtils.set_logger(
-        os.path.join(output_dir, f"train_{args.dataset_name}.log")
-    )
+    baselineUtils.set_logger(os.path.join(output_dir, f"train_{args.dataset_name}.log"))
     config_file = open(
         os.path.join(output_dir, f"config_{args.dataset_name}.yaml"), "w"
     )
@@ -134,7 +132,6 @@ def main():
         verbose=args.verbose,
     )
 
-
     model = individual_TF.IndividualTF(
         2,
         3,
@@ -148,29 +145,27 @@ def main():
         std=[0, 0],
     ).to(device)
     if args.resume_train:
-        model.load_state_dict(
-            torch.load(f"{checkpoint_dir}/{args.model_pth}")
-        )
+        model.load_state_dict(torch.load(f"{checkpoint_dir}/{args.model_pth}"))
 
     tr_dl = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=16,
+        num_workers=0,
         collate_fn=baselineUtils.collate_fn,
     )
     val_dl = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=16,
+        num_workers=0,
         collate_fn=baselineUtils.collate_fn,
     )
     test_dl = torch.utils.data.DataLoader(
         test_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=16,
+        num_workers=0,
         collate_fn=baselineUtils.collate_fn,
     )
 
@@ -245,7 +240,7 @@ def main():
             target = (batch["trg"][:, :-1, 2:4].to(device) - mean.to(device)) / std.to(
                 device
             )
-            
+
             target_c = torch.zeros((target.shape[0], target.shape[1], 1)).to(device)
             target = torch.cat((target, target_c), -1)
             start_of_seq = (
@@ -258,10 +253,22 @@ def main():
 
             dec_inp = torch.cat((start_of_seq, target), 1)
 
-            src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+            # src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+            # trg_att = (
+            #     subsequent_mask(dec_inp.shape[1])
+            #     .repeat(dec_inp.shape[0], 1, 1)
+            #     .to(device)
+            # )
+            src_att = torch.ones(
+                (inp.shape[1], inp.shape[1]),
+            ).to(device)
             trg_att = (
-                subsequent_mask(dec_inp.shape[1])
-                .repeat(dec_inp.shape[0], 1, 1)
+                torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1])) == 1
+            ).transpose(0, 1)
+            trg_att = (
+                trg_att.float()
+                .masked_fill(trg_att == 0, float("-inf"))
+                .masked_fill(trg_att == 1, float(0.0))
                 .to(device)
             )
 
@@ -310,7 +317,6 @@ def main():
                     inp = (
                         batch["src"][:, 1:, 2:4].to(device) - mean.to(device)
                     ) / std.to(device)
-                    src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
                     start_of_seq = (
                         torch.Tensor([0, 0, 1])
                         .unsqueeze(0)
@@ -318,12 +324,26 @@ def main():
                         .repeat(inp.shape[0], 1, 1)
                         .to(device)
                     )
-                    dec_inp = start_of_seq
 
+                    dec_inp = start_of_seq
+                    # src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+                    src_att = torch.ones(
+                        (inp.shape[1], inp.shape[1]),
+                    ).to(device)
                     for i in range(args.preds):
+                        # trg_att = (
+                        #     subsequent_mask(dec_inp.shape[1])
+                        #     .repeat(dec_inp.shape[0], 1, 1)
+                        #     .to(device)
+                        # )
                         trg_att = (
-                            subsequent_mask(dec_inp.shape[1])
-                            .repeat(dec_inp.shape[0], 1, 1)
+                            torch.triu(torch.ones(dec_inp.shape[1], dec_inp.shape[1]))
+                            == 1
+                        ).transpose(0, 1)
+                        trg_att = (
+                            trg_att.float()
+                            .masked_fill(trg_att == 0, float("-inf"))
+                            .masked_fill(trg_att == 1, float(0.0))
                             .to(device)
                         )
                         out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
@@ -363,7 +383,7 @@ def main():
                         inp = (
                             batch["src"][:, 1:, 2:4].to(device) - mean.to(device)
                         ) / std.to(device)
-                        src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+
                         start_of_seq = (
                             torch.Tensor([0, 0, 1])
                             .unsqueeze(0)
@@ -371,12 +391,28 @@ def main():
                             .repeat(inp.shape[0], 1, 1)
                             .to(device)
                         )
-                        dec_inp = start_of_seq
 
+                        dec_inp = start_of_seq
+                        # src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+                        src_att = torch.ones(
+                            (inp.shape[1], inp.shape[1]),
+                        ).to(device)
                         for i in range(args.preds):
+                            # trg_att = (
+                            #     subsequent_mask(dec_inp.shape[1])
+                            #     .repeat(dec_inp.shape[0], 1, 1)
+                            #     .to(device)
+                            # )
                             trg_att = (
-                                subsequent_mask(dec_inp.shape[1])
-                                .repeat(dec_inp.shape[0], 1, 1)
+                                torch.triu(
+                                    torch.ones(dec_inp.shape[1], dec_inp.shape[1])
+                                )
+                                == 1
+                            ).transpose(0, 1)
+                            trg_att = (
+                                trg_att.float()
+                                .masked_fill(trg_att == 0, float("-inf"))
+                                .masked_fill(trg_att == 1, float(0.0))
                                 .to(device)
                             )
                             out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
@@ -418,9 +454,7 @@ def main():
 
         if epoch % args.save_step == 0:
 
-            torch.save(
-                model.state_dict(), f"{checkpoint_dir}/{epoch:05d}.pth"
-            )
+            torch.save(model.state_dict(), f"{checkpoint_dir}/{epoch:05d}.pth")
 
         epoch += 1
     ab = 1

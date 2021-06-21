@@ -34,7 +34,7 @@ class EncoderDecoder(nn.Module):
         # return self.decode(self.encode(src, src_mask, seq_start_end), src_mask, tgt, tgt_mask)
         enc_emb = self.src_embed(src).permute(1, 0, 2)
         dec_emb = self.tgt_embed(tgt).permute(1, 0, 2)
-        return self.transformer(enc_emb, dec_emb).permute(1, 0, 2)
+        return self.transformer(enc_emb, dec_emb, src_mask, tgt_mask).permute(1, 0, 2)
 
     def encode(self, src, src_mask, seq_start_end):
         return self.encoder(self.src_embed(src), src_mask, seq_start_end)
