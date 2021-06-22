@@ -184,16 +184,16 @@ def main():
         fde = np.array(fde)
         mad = ade.mean()
         fad = fde.mean()
-        scipy.io.savemat(
-            f"output/IndividualTF/{args.name}/MM_deterministic.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                "pr": pr,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/IndividualTF/{args.name}/MM_deterministic.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         "pr": pr,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)
@@ -276,16 +276,16 @@ def main():
         mad_samp = ade.mean()
         fad_samp = fde.mean()
 
-        scipy.io.savemat(
-            f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                # "pr": preds_all_fin,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         # "pr": preds_all_fin,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)
