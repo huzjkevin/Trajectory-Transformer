@@ -9,7 +9,7 @@ import time
 from transformer.batch import subsequent_mask
 from torch.optim import Adam, SGD, RMSprop, Adagrad
 from transformer.noam_opt import NoamOpt
-import individual_TF
+import individual_TF_pytorch
 import numpy as np
 import scipy.io
 import json
@@ -17,7 +17,6 @@ import pickle
 import random
 
 from torch.utils.tensorboard import SummaryWriter
-import quantized_TF
 
 
 def main():
@@ -37,7 +36,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--delim", type=str, default="\t")
     parser.add_argument("--name", type=str, default="trajectory_combined")
-    parser.add_argument("--epoch", type=str, default="00000")
+    parser.add_argument("--epoch", type=str, default="00150")
     parser.add_argument("--num_samples", type=int, default="20")
 
     args = parser.parse_args()
@@ -102,7 +101,7 @@ def main():
     mean = torch.from_numpy(mat["mean"])
     std = torch.from_numpy(mat["std"])
 
-    model = individual_TF.IndividualTF(
+    model = individual_TF_pytorch.IndividualTF(
         2,
         3,
         3,
@@ -116,7 +115,7 @@ def main():
     ).to(device)
 
     checkpoint_dir = os.path.join(
-        "exp_trajectory_combined_20210621113252", f"IndividualTF_ckpts"
+        "exp_trajectory_combined_20210622103624", f"IndividualTF_ckpts"
     )
     model.load_state_dict(
         torch.load(f"{checkpoint_dir}/{args.epoch}.pth")
@@ -151,7 +150,7 @@ def main():
                 device
             )
 
-            src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+            src_att = torch.zeros((inp.shape[1], inp.shape[1])).type(torch.bool).to(device)
             start_of_seq = (
                 torch.Tensor([0, 0, 1])
                 .unsqueeze(0)
@@ -162,11 +161,7 @@ def main():
             dec_inp = start_of_seq
 
             for i in range(args.preds):
-                trg_att = (
-                    subsequent_mask(dec_inp.shape[1])
-                    .repeat(dec_inp.shape[0], 1, 1)
-                    .to(device)
-                )
+                trg_att = individual_TF_pytorch.generate_square_subsequent_mask(dec_inp.shape[1]).to(device)
                 out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                 dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
@@ -227,7 +222,7 @@ def main():
                 device
             )
 
-            src_att = torch.ones((inp.shape[0], 1, inp.shape[1])).to(device)
+            src_att = torch.zeros((inp.shape[1], inp.shape[1])).type(torch.bool).to(device)
             start_of_seq = (
                 torch.Tensor([0, 0, 1])
                 .unsqueeze(0)
@@ -240,11 +235,7 @@ def main():
             for sam in range(num_samples):
                 dec_inp = start_of_seq
                 for i in range(args.preds):
-                    trg_att = (
-                        subsequent_mask(dec_inp.shape[1])
-                        .repeat(dec_inp.shape[0], 1, 1)
-                        .to(device)
-                    )
+                    trg_att = individual_TF_pytorch.generate_square_subsequent_mask(dec_inp.shape[1]).to(device)
                     out = model(inp, dec_inp, src_att, trg_att, seq_start_end)
                     dec_inp = torch.cat((dec_inp, out[:, -1:, :]), 1)
 
