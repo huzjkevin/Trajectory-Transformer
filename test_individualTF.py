@@ -73,6 +73,8 @@ def main():
     np.random.seed(seed)
     torch.manual_seed(seed)
 
+    exp_dir = "exp_trajectory_combined_20210621175524"
+    checkpoint_dir = os.path.join(exp_dir, "IndividualTF_ckpts")
     device = torch.device("cuda")
 
     if args.cpu or not torch.cuda.is_available():
@@ -95,7 +97,7 @@ def main():
     )
 
     mat = scipy.io.loadmat(
-        os.path.join("models/IndividualTF", args.dataset_name, "norm.mat")
+        os.path.join(exp_dir, "norm.mat")
     )
 
     mean = torch.from_numpy(mat["mean"])
@@ -114,9 +116,6 @@ def main():
         std=[0, 0],
     ).to(device)
 
-    checkpoint_dir = os.path.join(
-        "exp_trajectory_combined_20210622103624", f"IndividualTF_ckpts"
-    )
     model.load_state_dict(
         torch.load(f"{checkpoint_dir}/{args.epoch}.pth")
     )
