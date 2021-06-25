@@ -6,7 +6,7 @@ from transformer.multihead_attention import MultiHeadAttention
 from transformer.positional_encoding import PositionalEncoding
 from transformer.pointerwise_feedforward import PointerwiseFeedforward
 from transformer.encoder_decoder import EncoderDecoder
-from transformer.encoder import Encoder
+from transformer.encoder import Encoder1, Encoder2
 from transformer.encoder_layer import EncoderLayer
 from transformer.decoder_layer import DecoderLayer
 from transformer.batch import subsequent_mask
@@ -42,7 +42,8 @@ class IndividualTF(nn.Module):
         self.mean = np.array(mean)
         self.std = np.array(std)
         self.model = EncoderDecoder(
-            Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            Encoder1(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            Encoder2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
             # EncoderVer2(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
             Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
             nn.Sequential(LinearEmbedding(enc_inp_size, d_model), c(position)),

@@ -11,9 +11,10 @@ class EncoderDecoder(nn.Module):
     other models.
     """
 
-    def __init__(self, encoder, decoder, src_embed, tgt_embed, generator, noise_dim=16):
+    def __init__(self, encoder1, encoder2, decoder, src_embed, tgt_embed, generator, noise_dim=16):
         super(EncoderDecoder, self).__init__()
-        self.encoder = encoder
+        self.encoder1 = encoder1
+        self.encoder2 = encoder2
         self.decoder = decoder
         self.src_embed = src_embed
         self.tgt_embed = tgt_embed
@@ -30,7 +31,10 @@ class EncoderDecoder(nn.Module):
         )
 
     def encode(self, src, src_mask, seq_start_end):
-        return self.encoder(self.src_embed(src), src_mask, seq_start_end)
+        feat = self.encoder1(self.src_embed(src), src_mask, seq_start_end)
+        feat = self.encoder2(feat, src_mask)
+        return feat
+        # return self.encoder(self.src_embed(src), src_mask, seq_start_end)
 
     def decode(self, memory, src_mask, tgt, tgt_mask):
         return self.decoder(self.tgt_embed(tgt), memory, src_mask, tgt_mask)
