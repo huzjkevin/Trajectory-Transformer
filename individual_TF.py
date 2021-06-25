@@ -28,7 +28,7 @@ class IndividualTF(nn.Module):
         d_model=512,
         d_ff=2048,
         h=8,
-        dropout=0.1,
+        dropout=0.2,
         mean=[0, 0],
         std=[0, 0],
         noise_dim=16,

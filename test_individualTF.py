@@ -1,4 +1,5 @@
 import argparse
+from math import exp
 import baselineUtils
 import torch
 import torch.utils.data
@@ -37,7 +38,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--delim", type=str, default="\t")
     parser.add_argument("--name", type=str, default="trajectory_combined")
-    parser.add_argument("--epoch", type=str, default="00000")
+    parser.add_argument("--epoch", type=str, default="00190")
     parser.add_argument("--num_samples", type=int, default="20")
 
     args = parser.parse_args()
@@ -74,6 +75,11 @@ def main():
     np.random.seed(seed)
     torch.manual_seed(seed)
 
+    exp_dir = "exp_trajectory_combined_20210624104029"
+    checkpoint_dir = os.path.join(
+        exp_dir, f"IndividualTF_ckpts"
+    )
+
     device = torch.device("cuda")
 
     if args.cpu or not torch.cuda.is_available():
@@ -96,7 +102,7 @@ def main():
     )
 
     mat = scipy.io.loadmat(
-        os.path.join("models/IndividualTF", args.dataset_name, "norm.mat")
+        os.path.join(exp_dir, "norm.mat")
     )
 
     mean = torch.from_numpy(mat["mean"])
@@ -115,9 +121,6 @@ def main():
         std=[0, 0],
     ).to(device)
 
-    checkpoint_dir = os.path.join(
-        "exp_trajectory_combined_20210621113252", f"IndividualTF_ckpts"
-    )
     model.load_state_dict(
         torch.load(f"{checkpoint_dir}/{args.epoch}.pth")
     )
@@ -190,16 +193,16 @@ def main():
         fde = np.array(fde)
         mad = ade.mean()
         fad = fde.mean()
-        scipy.io.savemat(
-            f"output/IndividualTF/{args.name}/MM_deterministic.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                "pr": pr,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/IndividualTF/{args.name}/MM_deterministic.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         "pr": pr,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)
@@ -286,16 +289,16 @@ def main():
         mad_samp = ade.mean()
         fad_samp = fde.mean()
 
-        scipy.io.savemat(
-            f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
-            {
-                "input": inp,
-                "gt": gt,
-                # "pr": preds_all_fin,
-                "dt": dt,
-                "dt_names": dt_names,
-            },
-        )
+        # scipy.io.savemat(
+        #     f"output/IndividualTF/{args.name}/MM_{num_samples}.mat",
+        #     {
+        #         "input": inp,
+        #         "gt": gt,
+        #         # "pr": preds_all_fin,
+        #         "dt": dt,
+        #         "dt_names": dt_names,
+        #     },
+        # )
 
         print("Determinitic:")
         print("mad: %6.3f" % mad)

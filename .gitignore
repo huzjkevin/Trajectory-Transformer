@@ -9,3 +9,4 @@ trajectory_combined*/
 .vscode/
 exp*/
 test*
+*.sh
