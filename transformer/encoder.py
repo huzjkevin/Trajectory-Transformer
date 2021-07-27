@@ -32,35 +32,36 @@ class Encoder1(nn.Module):
         self.layers = clones(layer, n)
         self.norm = LayerNorm(layer.size)
 
-        n_units = [512, 16, 512]
-        n_heads = [8, 1]
-        dropout = 0.3
-        alpha = 0.2
-        self.gatencoder = GATEncoder(
-            n_units=n_units, n_heads=n_heads, dropout=dropout, alpha=alpha
-        )
+        # n_units = [512, 16, 512]
+        # n_heads = [8, 1]
+        # dropout = 0.3
+        # alpha = 0.2
+        # self.gatencoder = GATEncoder(
+        #     n_units=n_units, n_heads=n_heads, dropout=dropout, alpha=alpha
+        # )
 
-        self.fusion_layer = nn.Linear(512 * 2, 512)
+        # self.fusion_layer = nn.Linear(512 * 2, 512)
 
     def forward(self, emb, temporal_emb_mask, seq_start_end):
         """
         Pass the input (and mask) through each layer in turn.
         """
         temporal_emb = emb.clone()
-        spatial_emb = emb.clone()
+        # spatial_emb = emb.clone()
         for layer in self.layers:
             temporal_emb = layer(temporal_emb, temporal_emb_mask)
 
         temporal_emb = self.norm(temporal_emb)
 
 
-        if seq_start_end is not None:
-            spatial_emb = self.gatencoder(spatial_emb.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
+        # if seq_start_end is not None:
+        #     spatial_emb = self.gatencoder(spatial_emb.permute(1, 0, 2), seq_start_end).permute(1, 0, 2)
 
-        emb = torch.cat((temporal_emb, spatial_emb), dim=-1)
-        emb = self.fusion_layer(emb)
+        # emb = torch.cat((temporal_emb, spatial_emb), dim=-1)
+        # emb = self.fusion_layer(emb)
 
-        return emb
+        # return emb
+        return temporal_emb
 
 
 class Encoder2(nn.Module):
