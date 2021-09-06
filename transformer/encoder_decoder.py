@@ -31,8 +31,8 @@ class EncoderDecoder(nn.Module):
         )
 
     def encode(self, src, src_mask, seq_start_end):
-        feat = self.encoder1(self.src_embed(src), src_mask, seq_start_end)
-        feat = self.encoder2(feat, src_mask)
+        # feat = self.encoder1(self.src_embed(src), src_mask, seq_start_end)
+        feat = self.encoder2(self.src_embed(src), src_mask)
         return feat
         # return self.encoder(self.src_embed(src), src_mask, seq_start_end)
 
