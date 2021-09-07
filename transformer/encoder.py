@@ -32,15 +32,15 @@ class Encoder(nn.Module):
         self.layers = clones(layer, n)
         self.norm = LayerNorm(layer.size)
 
-        n_units = [768, 16, 768]
-        n_heads = [16, 1]
-        dropout = 0.5
+        n_units = [512, 16, 512]
+        n_heads = [8, 1]
+        dropout = 0.4
         alpha = 0.2
         self.gatencoder = GATEncoder(
             n_units=n_units, n_heads=n_heads, dropout=dropout, alpha=alpha
         )
 
-        self.fusion_layer = nn.Linear(768 * 2, 768)
+        self.fusion_layer = nn.Linear(512 * 2, 512)
 
     def forward(self, emb, temporal_emb_mask, seq_start_end):
         """
