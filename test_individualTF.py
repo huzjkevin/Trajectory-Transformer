@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--delim", type=str, default="\t")
     parser.add_argument("--name", type=str, default="trajectory_combined")
-    parser.add_argument("--epoch", type=str, default="00190")
+    parser.add_argument("--epoch", type=str, default="00000")
     parser.add_argument("--num_samples", type=int, default="20")
 
     args = parser.parse_args()
@@ -75,7 +75,7 @@ def main():
     np.random.seed(seed)
     torch.manual_seed(seed)
 
-    exp_dir = "exp_trajectory_combined_20210624104029"
+    exp_dir = "exp_trajectory_combined_20210914141848"
     checkpoint_dir = os.path.join(
         exp_dir, f"IndividualTF_ckpts"
     )
